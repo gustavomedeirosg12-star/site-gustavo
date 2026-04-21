@@ -178,7 +178,7 @@ export const NumbersSection = () => {
       <div className="w-full max-w-7xl mx-auto flex flex-col md:flex-row justify-between">
         <div className="w-full grid grid-cols-1 md:grid-cols-4">
           <NumberCounter value={40} label="Projetos Entregues" suffix="+" />
-          <NumberCounter value={12} label="Nichos Atendidos" />
+          <NumberCounter value={6} label="Nichos Dominados" suffix="+" />
           <NumberCounter value={48} label="Horas pra Entrega" suffix="h" />
           <NumberCounter value={100} label="Satisfação" suffix="%" />
         </div>

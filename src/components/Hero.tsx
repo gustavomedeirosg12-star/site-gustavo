@@ -2,12 +2,13 @@ import React, { useRef, useState } from 'react';
 import { motion, useScroll, useTransform, useSpring } from 'motion/react';
 import { MessageCircle } from 'lucide-react';
 import { SplitText, MagneticButton, WHATSAPP_URL } from './Shared';
+import { LiquidBackground } from './LiquidBackground';
+import { playAudio } from '../lib/audio';
 
 export const HeroSection = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   
   // Interactive Volumetric Light Follower
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const springConfig = { damping: 25, stiffness: 50, mass: 0.5 };
   const smoothX = useSpring(0, springConfig);
   const smoothY = useSpring(0, springConfig);
@@ -25,10 +26,11 @@ export const HeroSection = () => {
       onMouseMove={handleMouseMove}
       className="relative min-h-screen flex items-center overflow-hidden z-10 w-full bg-[#020202]"
     >
+      <LiquidBackground />
+
       {/* Interactive WebGL-like Volumetric Lighting */}
       <motion.div
         style={{ x: smoothX, y: smoothY, translateX: '-50%', translateY: '-50%' }}
-        className="absolute top-0 left-0 w-[600px] h-[600px] bg-brand-gold rounded-full mix-blend-screen pointer-events-none hidden md:block"
         initial={{ opacity: 0 }}
         animate={{ opacity: 0.05 }}
         transition={{ duration: 2 }}
@@ -98,13 +100,18 @@ export const HeroSection = () => {
               className="group relative px-10 py-5 bg-brand-gold text-brand-black rounded-sm overflow-hidden transition-all hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_30px_rgba(212,175,55,0.15)] hover:shadow-[0_0_40px_rgba(212,175,55,0.3)] w-full sm:w-auto"
             >
               <span className="absolute inset-0 w-full h-full -ml-[100%] bg-gradient-to-r from-transparent via-white/40 to-transparent group-hover:animate-shimmer" />
-              <span className="relative flex items-center justify-center gap-3">
+              <span 
+                className="relative flex items-center justify-center gap-3"
+                onMouseEnter={() => playAudio.playHover()}
+                onClick={() => playAudio.playClick()}
+              >
                 <span className="text-sm font-bold uppercase tracking-widest">Transformar Meu Negócio</span>
               </span>
             </MagneticButton>
             
             <a 
               href="#resultados"
+              onMouseEnter={() => playAudio.playHover()}
               className="text-brand-gray text-xs font-bold uppercase tracking-[0.15em] hover:text-white transition-colors relative after:content-[''] after:absolute after:w-full after:scale-x-0 after:h-[1px] after:-bottom-2 after:left-0 after:bg-brand-gold hover:after:scale-x-100 after:origin-bottom-right hover:after:origin-bottom-left after:transition-transform after:duration-500 w-full sm:w-auto text-center"
             >
               Ver Resultados

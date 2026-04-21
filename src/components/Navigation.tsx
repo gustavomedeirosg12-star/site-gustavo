@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'motion/react';
 import { WHATSAPP_URL } from './Shared';
+import { playAudio } from '../lib/audio';
 
 export const NavBar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [lang, setLang] = useState<'PT' | 'EN'>('PT');
   const { scrollY } = useScroll();
   
   const backgroundColor = useTransform(
@@ -34,10 +36,15 @@ export const NavBar = () => {
     })
   };
 
+  const toggleLang = () => {
+    playAudio.playClick();
+    setLang(l => l === 'PT' ? 'EN' : 'PT');
+  };
+
   return (
     <>
       <motion.header 
-        className="fixed top-0 left-0 right-0 z-50 transition-all"
+        className="fixed top-0 left-0 right-0 z-50 transition-all font-body"
         style={{ backgroundColor, backdropFilter, borderBottomWidth: 1, borderBottomStyle: 'solid', borderBottomColor: borderBottom }}
       >
         <div className="w-full max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
@@ -45,40 +52,55 @@ export const NavBar = () => {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-xl font-bold font-heading tracking-tight flex items-center gap-2 text-white z-50 relative"
+            className="text-xl font-bold font-heading tracking-tight flex items-center gap-2 text-white z-50 relative cursor-pointer"
+            onMouseEnter={() => playAudio.playHover()}
           >
             <div className="w-2 h-2 rounded-full bg-brand-gold"></div>
             Gustavo Enrique
           </motion.div>
           
           <div className="hidden md:flex items-center gap-8">
+            <button 
+              onClick={toggleLang}
+              onMouseEnter={() => playAudio.playHover()}
+              className="group flex items-center gap-1 text-[10px] uppercase font-bold tracking-widest text-brand-gray hover:text-white transition-colors"
+            >
+              <span className={lang === 'PT' ? 'text-brand-gold' : ''}>PT</span>
+              <span className="opacity-30">/</span>
+              <span className={lang === 'EN' ? 'text-brand-gold' : ''}>EN</span>
+            </button>
+
              <motion.a 
-              href="#portfolio"
+              href="#resultados"
+              onMouseEnter={() => playAudio.playHover()}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.5 }}
               className="text-sm text-brand-gray hover:text-white transition-colors"
             >
-              Resultados
+              {lang === 'PT' ? 'Resultados' : 'Results'}
             </motion.a>
             <motion.a 
               href="#about"
+              onMouseEnter={() => playAudio.playHover()}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.6 }}
               className="text-sm text-brand-gray hover:text-white transition-colors"
             >
-              Sobre
+              {lang === 'PT' ? 'Sobre' : 'About'}
             </motion.a>
             <motion.a 
               href={WHATSAPP_URL}
+              onMouseEnter={() => playAudio.playHover()}
+              onClick={() => playAudio.playClick()}
               target="_blank" rel="noopener noreferrer"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.7 }}
               className="text-sm font-medium text-brand-gold hover:text-white transition-colors uppercase tracking-widest relative"
             >
-              Iniciar Projeto
+              {lang === 'PT' ? 'Iniciar Projeto' : 'Start Project'}
             </motion.a>
           </div>
 
@@ -87,7 +109,10 @@ export const NavBar = () => {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.5 }}
             className="md:hidden z-50 text-white relative w-8 h-8 flex flex-col justify-center items-center gap-1.5"
-            onClick={() => setIsOpen(!isOpen)}
+            onClick={() => {
+              playAudio.playClick();
+              setIsOpen(!isOpen);
+            }}
           >
             <motion.div animate={isOpen ? { rotate: 45, y: 6 } : { rotate: 0, y: 0 }} className="w-6 h-0.5 bg-white transition-transform" />
             <motion.div animate={isOpen ? { opacity: 0 } : { opacity: 1 }} className="w-6 h-0.5 bg-white transition-opacity" />
@@ -103,22 +128,27 @@ export const NavBar = () => {
             animate="open"
             exit="closed"
             variants={menuVariants}
-            className="fixed inset-0 bg-brand-black z-40 flex flex-col justify-center items-center px-6"
+            className="fixed inset-0 bg-[#020202] z-40 flex flex-col justify-center items-center px-6"
           >
-            {/* Background elements */}
             <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-gold/5 rounded-full blur-[100px] pointer-events-none" />
             
             <div className="flex flex-col gap-8 text-center">
-               {['Resultados', 'Processo', 'Sobre', 'Dúvidas'].map((item, i) => (
+               {[
+                 { id: 'resultados', labelPT: 'Resultados', labelEN: 'Results' },
+                 { id: 'sobre', labelPT: 'Sobre', labelEN: 'About' }
+               ].map((item, i) => (
                   <motion.a 
-                    key={item}
-                    href={`#${item.toLowerCase()}`}
+                    key={item.id}
+                    href={`#${item.id}`}
                     custom={i}
                     variants={linkVariants}
-                    onClick={() => setIsOpen(false)}
+                    onClick={() => {
+                      playAudio.playClick();
+                      setIsOpen(false);
+                    }}
                     className="text-4xl font-heading text-white hover:text-brand-gold transition-colors"
                   >
-                    {item}
+                    {lang === 'PT' ? item.labelPT : item.labelEN}
                   </motion.a>
                ))}
                
@@ -126,11 +156,21 @@ export const NavBar = () => {
                 custom={4}
                 variants={linkVariants}
                 href={WHATSAPP_URL}
+                onClick={() => playAudio.playClick()}
                 target="_blank" rel="noopener noreferrer"
-                className="mt-8 px-8 py-4 bg-brand-gold text-brand-black font-semibold rounded-lg text-lg"
+                className="mt-8 px-8 py-4 bg-brand-gold text-brand-black font-semibold rounded-sm text-lg uppercase tracking-widest text-xs"
                >
-                 Quero Vender Mais
+                 {lang === 'PT' ? 'Quero Vender Mais' : 'I Want More Sales'}
                </motion.a>
+               
+               <motion.button
+                custom={5}
+                variants={linkVariants}
+                onClick={toggleLang}
+                className="mt-12 text-sm tracking-widest text-brand-gray border border-white/10 px-6 py-2 rounded-full"
+               >
+                 {lang === 'PT' ? 'Switch to English' : 'Mudar para Português'}
+               </motion.button>
             </div>
           </motion.div>
         )}

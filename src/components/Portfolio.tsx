@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { motion, useInView, useScroll, useTransform, AnimatePresence } from 'motion/react';
 import { AnimTitle, WHATSAPP_URL } from './Shared';
+import { playAudio } from '../lib/audio';
 
 const PortfolioCard = ({ id, title, desc, tag, image, onClick }: { id: string, title: string, desc: string, tag: string, image: string, onClick: () => void }) => {
   const ref = useRef<HTMLDivElement>(null);
@@ -39,7 +40,12 @@ const PortfolioCard = ({ id, title, desc, tag, image, onClick }: { id: string, t
       layoutId={`card-${id}`}
       ref={ref}
       data-cursor="VER PROJETO"
-      onClick={onClick}
+      onClick={() => {
+        playAudio.playClick();
+        playAudio.playModal();
+        onClick();
+      }}
+      onMouseEnter={() => playAudio.playHover()}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       initial={{ opacity: 0, y: 30 }}
@@ -51,7 +57,7 @@ const PortfolioCard = ({ id, title, desc, tag, image, onClick }: { id: string, t
       className="group relative p-8 w-full h-[500px] md:h-[600px] rounded-sm overflow-hidden flex flex-col justify-end transition-transform duration-200 ease-out will-change-transform cursor-pointer border border-white/5 bg-[#080808] outline-none"
     >
       <motion.div layoutId={`image-${id}`} style={{ y, scale: 1.25 }} className="absolute inset-0 z-0 h-[130%] -top-[15%]">
-        <img src={image} alt={title} className="w-full h-full object-cover opacity-30 grayscale group-hover:grayscale-0 group-hover:opacity-60 transition-all duration-700" />
+        <img src={`${image}&fm=avif&q=80`} loading="lazy" decoding="async" alt={title} className="w-full h-full object-cover opacity-30 grayscale group-hover:grayscale-0 group-hover:opacity-60 transition-all duration-700" />
       </motion.div>
 
       <div className="absolute inset-0 bg-gradient-to-t from-[#020202] via-[#020202]/80 to-transparent z-10 pointer-events-none" />
@@ -167,7 +173,10 @@ export const PortfolioGrid = () => {
               <button 
                 data-cursor="FECHAR"
                 className="absolute top-6 right-6 z-50 text-white mix-blend-difference hover:rotate-90 transition-transform duration-300 w-10 h-10 flex items-center justify-center bg-black/20 rounded-full backdrop-blur-md"
-                onClick={() => setSelectedId(null)}
+                onClick={() => {
+                  playAudio.playClick();
+                  setSelectedId(null);
+                }}
               >
                 ✕
               </button>
@@ -175,7 +184,7 @@ export const PortfolioGrid = () => {
               <div className="w-full md:w-1/2 h-64 md:h-full relative overflow-hidden">
                 <motion.img 
                   layoutId={`image-${selectedProject.id}`} 
-                  src={selectedProject.image} 
+                  src={`${selectedProject.image}&fm=avif&q=80`}
                   className="w-full h-full object-cover grayscale" 
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] to-transparent md:hidden"></div>

@@ -31,18 +31,28 @@ const Preloader = ({ onComplete }: { onComplete: () => void }) => {
   const [percent, setPercent] = useState(0);
 
   useEffect(() => {
+    // Only run full preloader once per session
+    if (sessionStorage.getItem('visited')) {
+      onComplete();
+      return;
+    }
+
     let current = 0;
     const interval = setInterval(() => {
       current += Math.floor(Math.random() * 8) + 2;
       if (current >= 100) {
         current = 100;
         clearInterval(interval);
+        sessionStorage.setItem('visited', 'true');
         setTimeout(() => onComplete(), 400); // Wait a tiny bit at 100%
       }
       setPercent(current);
     }, 30);
     return () => clearInterval(interval);
   }, [onComplete]);
+
+  // If already visited, render nothing (unmount immediately)
+  if (sessionStorage.getItem('visited')) return null;
 
   return (
     <motion.div
