@@ -1,5 +1,27 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, useInView } from 'motion/react';
+import Marquee from 'react-fast-marquee';
+
+export const InfiniteMarquee = () => {
+  return (
+    <div className="w-full bg-brand-gold py-4 overflow-hidden border-y border-white/10 relative z-20">
+      <Marquee autoFill speed={50} className="overflow-hidden">
+        <div className="flex items-center gap-8 px-4 text-[#020202]">
+          <span className="font-heading text-xl md:text-2xl font-bold uppercase tracking-widest whitespace-nowrap">Clínicas de Estética</span>
+          <span className="w-2 h-2 rounded-full bg-[#020202]"></span>
+          <span className="font-heading text-xl md:text-2xl font-bold uppercase tracking-widest whitespace-nowrap">Escritórios de Advocacia</span>
+          <span className="w-2 h-2 rounded-full bg-[#020202]"></span>
+          <span className="font-heading text-xl md:text-2xl font-bold uppercase tracking-widest whitespace-nowrap">Imobiliárias e Corretores</span>
+          <span className="w-2 h-2 rounded-full bg-[#020202]"></span>
+          <span className="font-heading text-xl md:text-2xl font-bold uppercase tracking-widest whitespace-nowrap">Arquitetos</span>
+          <span className="w-2 h-2 rounded-full bg-[#020202]"></span>
+          <span className="font-heading text-xl md:text-2xl font-bold uppercase tracking-widest whitespace-nowrap">Lojas de Alto Padrão</span>
+          <span className="w-2 h-2 rounded-full bg-[#020202]"></span>
+        </div>
+      </Marquee>
+    </div>
+  );
+};
 
 export const WHATSAPP_URL = "https://wa.me/553484304734?text=Ol%C3%A1%20Gustavo%2C%20vim%20pelo%20seu%20site%20e%20quero%20saber%20mais";
 
@@ -34,20 +56,27 @@ export const SplitText = ({ children, delay = 0, className = "" }: { children: s
   );
 };
 
-export const AnimTitle = ({ children, className = "" }: { children: React.ReactNode, className?: string }) => {
+export const AnimTitle = ({ children, className = "" }: { children: string, className?: string }) => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
+  const lines = typeof children === 'string' ? children.split('<br/>') : [children];
+
   return (
-    <motion.h2
-      ref={ref}
-      initial={{ opacity: 0, letterSpacing: "-0.05em" }}
-      animate={isInView ? { opacity: 1, letterSpacing: "normal" } : {}}
-      transition={{ duration: 1, ease: "easeOut" }}
-      className={`font-heading text-white ${className}`}
-    >
-      {children}
-    </motion.h2>
+    <h2 ref={ref} className={`font-heading text-white ${className}`}>
+      {lines.map((line, i) => (
+        <span key={i} className="block overflow-hidden pb-2">
+          <motion.span
+            className="block will-change-transform"
+            initial={{ y: "100%", opacity: 0 }}
+            animate={isInView ? { y: 0, opacity: 1 } : {}}
+            transition={{ duration: 0.9, delay: i * 0.15, ease: [0.76, 0, 0.24, 1] }}
+          >
+            {line}
+          </motion.span>
+        </span>
+      ))}
+    </h2>
   );
 };
 

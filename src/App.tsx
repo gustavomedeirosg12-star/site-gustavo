@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { motion, useScroll } from 'motion/react';
-import { WHATSAPP_URL } from './components/Shared';
+import { motion, useScroll, AnimatePresence } from 'motion/react';
+import Lenis from 'lenis';
+import { WHATSAPP_URL, InfiniteMarquee } from './components/Shared';
 import { NavBar } from './components/Navigation';
 import { HeroSection } from './components/Hero';
 import { PainSection, SolutionSection, NumbersSection, AboutSection, FinalCTA } from './components/OtherSections';
-import { PortfolioHorizontal } from './components/PortfolioHorizontal';
+import { PortfolioGrid } from './components/Portfolio';
 import { FAQSection } from './components/FAQ';
 
 const WhatsAppFloat = () => {
@@ -26,28 +27,104 @@ const WhatsAppFloat = () => {
   );
 };
 
+const Preloader = ({ onComplete }: { onComplete: () => void }) => {
+  const [percent, setPercent] = useState(0);
+
+  useEffect(() => {
+    let current = 0;
+    const interval = setInterval(() => {
+      current += Math.floor(Math.random() * 8) + 2;
+      if (current >= 100) {
+        current = 100;
+        clearInterval(interval);
+        setTimeout(() => onComplete(), 400); // Wait a tiny bit at 100%
+      }
+      setPercent(current);
+    }, 30);
+    return () => clearInterval(interval);
+  }, [onComplete]);
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-[9999] bg-[#020202] text-brand-gold flex flex-col items-center justify-center font-mono"
+      initial={{ y: 0 }}
+      exit={{ y: "-100%", transition: { duration: 0.8, ease: [0.76, 0, 0.24, 1] } }}
+    >
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 overflow-hidden">
+        <motion.div
+          animate={{ scale: percent === 100 ? [1, 1.5, 0] : 1, opacity: percent === 100 ? 0 : 1 }}
+          transition={{ duration: 0.8, ease: "easeInOut" }}
+          className="text-[12vw] font-heading font-light tracking-tight leading-none"
+        >
+          GE
+        </motion.div>
+      </div>
+      <div className="absolute bottom-10 right-10 text-xl font-light">
+        {percent.toString().padStart(3, '0')}%
+      </div>
+    </motion.div>
+  );
+}
+
 export default function App() {
   const { scrollYProgress } = useScroll();
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [isHovering, setIsHovering] = useState(false);
+  const [cursorState, setCursorState] = useState<'default' | 'hover' | 'text'>('default');
+  const [cursorText, setCursorText] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Lenis Smooth Scroll Setup
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      orientation: 'vertical',
+      gestureOrientation: 'vertical',
+      smoothWheel: true,
+      wheelMultiplier: 1,
+      touchMultiplier: 2,
+    });
+
+    function raf(time: number) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
+    requestAnimationFrame(raf);
+
     if (window.matchMedia("(pointer: coarse)").matches) return;
+    
     const updateMousePosition = (e: MouseEvent) => {
       setMousePosition({ x: e.clientX, y: e.clientY });
       const target = e.target as HTMLElement;
-      if (window.getComputedStyle(target).cursor === 'pointer' || target.closest('button') || target.closest('a')) {
-        setIsHovering(true);
+      
+      const customCursorEl = target.closest('[data-cursor]');
+      
+      if (customCursorEl) {
+        setCursorText(customCursorEl.getAttribute('data-cursor') || "");
+        setCursorState('text');
+      } else if (window.getComputedStyle(target).cursor === 'pointer' || target.closest('button') || target.closest('a')) {
+        setCursorText("");
+        setCursorState('hover');
       } else {
-        setIsHovering(false);
+        setCursorText("");
+        setCursorState('default');
       }
     };
+    
     window.addEventListener('mousemove', updateMousePosition);
-    return () => window.removeEventListener('mousemove', updateMousePosition);
+    
+    return () => {
+      window.removeEventListener('mousemove', updateMousePosition);
+      lenis.destroy();
+    };
   }, []);
 
   return (
     <div className="bg-brand-black min-h-[100dvh] font-body text-white selection:bg-brand-gold selection:text-black">
+      <AnimatePresence mode="wait">
+        {isLoading && <Preloader onComplete={() => setIsLoading(false)} />}
+      </AnimatePresence>
+
       <div className="noise-overlay text-white"></div>
       
       {/* Scroll Progress Line */}
@@ -63,53 +140,78 @@ export default function App() {
 
       {/* Global Custom Cursor */}
        <motion.div
-        className="fixed top-0 left-0 w-8 h-8 border border-brand-gold rounded-full pointer-events-none z-[100] md:flex items-center justify-center mix-blend-difference hidden"
+        className="fixed top-0 left-0 border border-brand-gold rounded-full pointer-events-none z-[100] md:flex items-center justify-center mix-blend-difference hidden overflow-hidden"
         animate={{
-          x: mousePosition.x - 16,
-          y: mousePosition.y - 16,
-          scale: isHovering ? 1.5 : 1,
-          backgroundColor: isHovering ? 'rgba(201, 168, 76, 0.1)' : 'transparent',
+          x: cursorState === 'text' ? mousePosition.x - 40 : mousePosition.x - 16,
+          y: cursorState === 'text' ? mousePosition.y - 40 : mousePosition.y - 16,
+          width: cursorState === 'text' ? 80 : 32,
+          height: cursorState === 'text' ? 80 : 32,
+          backgroundColor: cursorState === 'text' ? 'rgba(255, 255, 255, 1)' : (cursorState === 'hover' ? 'rgba(201, 168, 76, 0.1)' : 'transparent'),
+          scale: cursorState === 'hover' ? 1.5 : 1,
+          borderColor: cursorState === 'text' ? 'transparent' : '#C9A84C',
+          mixBlendMode: cursorState === 'text' ? 'normal' : 'difference'
         }}
         transition={{ type: 'spring', stiffness: 500, damping: 28, mass: 0.5 }}
       >
-        <motion.div className="w-1.5 h-1.5 bg-brand-gold rounded-full" animate={{ scale: isHovering ? 0 : 1 }} />
+        <AnimatePresence>
+          {cursorState === 'text' ? (
+            <motion.span 
+              initial={{ opacity: 0, scale: 0.5 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.5 }}
+              className="text-[#020202] text-[8px] font-bold font-heading uppercase text-center leading-tight tracking-widest break-words w-full px-2"
+            >
+              {cursorText}
+            </motion.span>
+          ) : (
+            <motion.div 
+              key="dot"
+              className="w-1.5 h-1.5 bg-brand-gold rounded-full" 
+              animate={{ scale: cursorState === 'hover' ? 0 : 1 }} 
+            />
+          )}
+        </AnimatePresence>
       </motion.div>
 
-      <NavBar />
-      
-      <main className="relative">
-        <HeroSection />
-        <PainSection />
-        <SolutionSection />
-        <NumbersSection />
-        <PortfolioHorizontal />
-        <AboutSection />
-        <FAQSection />
-        <FinalCTA />
-      </main>
+      {!isLoading && (
+        <>
+          <NavBar />
+          
+          <main className="relative">
+            <HeroSection />
+            <InfiniteMarquee />
+            <PainSection />
+            <SolutionSection />
+            <NumbersSection />
+            <PortfolioGrid />
+            <AboutSection />
+            <FAQSection />
+            <FinalCTA />
+          </main>
 
-      <WhatsAppFloat />
+          <WhatsAppFloat />
 
-      <footer className="bg-brand-black text-brand-gray py-12 px-6 text-center text-sm relative z-10 overflow-hidden">
-        {/* Animated footer line */}
-        <motion.div 
-          className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-brand-gold to-transparent origin-left"
-          initial={{ scaleX: 0 }}
-          whileInView={{ scaleX: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 1.5, ease: "easeInOut" }}
-        />
-        <div className="flex flex-col items-center justify-center gap-6">
-          <div className="flex gap-4">
-             <a href="#" className="hover:text-brand-gold hover:scale-110 transition-all font-heading tracking-widest uppercase text-xs">Instagram</a>
-             <a href="#" className="hover:text-brand-gold hover:scale-110 transition-all font-heading tracking-widest uppercase text-xs">LinkedIn</a>
-          </div>
-          <div>
-            <p>© {new Date().getFullYear()} Gustavo Enrique. Todos os direitos reservados.</p>
-            <p className="mt-2 text-xs opacity-50">Inimigo do marketing que não paga boleto.</p>
-          </div>
-        </div>
-      </footer>
+          <footer className="bg-brand-black text-brand-gray py-12 px-6 text-center text-sm relative z-10 overflow-hidden">
+            {/* Animated footer line */}
+            <motion.div 
+              className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-brand-gold to-transparent origin-left"
+              initial={{ scaleX: 0 }}
+              whileInView={{ scaleX: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 1.5, ease: "easeInOut" }}
+            />
+            <div className="flex flex-col items-center justify-center gap-6">
+              <div className="flex gap-4">
+                 <a href="#" className="hover:text-brand-gold hover:scale-110 transition-all font-heading tracking-widest uppercase text-xs">Instagram</a>
+              </div>
+              <div>
+                <p>© {new Date().getFullYear()} Gustavo Enrique. Todos os direitos reservados.</p>
+                <p className="mt-2 text-xs opacity-50">Inimigo do marketing que não paga boleto.</p>
+              </div>
+            </div>
+          </footer>
+        </>
+      )}
     </div>
   );
 }
